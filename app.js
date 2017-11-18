@@ -7,9 +7,20 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-const dishRouter = require('routes/dishRouter');
-const promoRouter = require('routes/promoRouter');
-const leaderRouter = require('routes/leaderRouter');
+const dishRouter = require('./routes/dishRouter');
+const promoRouter = require('./routes/promoRouter');
+const leaderRouter = require('./routes/leaderRouter');
+const mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
+
+const Dishes = require('./models/dishes');
+
+// Connection URL
+const url = 'mongodb://localhost:27017/conFusion';
+const connect = mongoose.connect(url, {
+    useMongoClient: true,
+    /* other options */
+  });
 
 var app = express();
 
@@ -50,3 +61,6 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+connect.then((db) => {
+    console.log("Connected correctly to server");
+}, (err) => { console.log(err); });
