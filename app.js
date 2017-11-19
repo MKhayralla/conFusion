@@ -22,6 +22,10 @@ const connect = mongoose.connect(url, {
     /* other options */
   });
 
+connect.then((db) => {
+      console.log("Connected correctly to server");
+}, (err) => {console.log(err);});
+
 var app = express();
 
 // view engine setup
@@ -34,8 +38,32 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(function(req, res, next){
+  console.log(req.headers);
+  var authHeader = req.headers.authorization;
+  if (!authHeader) {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      return next(err);
+      return;
+  }
+
+  var auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
+  var user = auth[0];
+  var pass = auth[1];
+  if (user == 'admin' && pass == 'password') {
+      next(); // authorized
+  } else {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      next(err);
+  }
+})
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 app.use('/dishes',dishRouter);
@@ -61,6 +89,3 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-connect.then((db) => {
-    console.log("Connected correctly to server");
-}, (err) => { console.log(err); });
