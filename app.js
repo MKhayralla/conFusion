@@ -52,7 +52,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 
-app.use(function auth (req, res, next) {
+/*app.use(function auth (req, res, next) {
     console.log(req.user);
 
     if (!req.user) {
@@ -64,7 +64,7 @@ app.use(function auth (req, res, next) {
     else {
           next();
     }
-});
+});*/
 app.use('/dishes',dishRouter);
 app.use('/promotions',promoRouter);
 app.use('/leaders',leaderRouter);
