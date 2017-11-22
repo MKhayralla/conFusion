@@ -8,8 +8,7 @@ const bodyParser = require('body-parser');
 
 router.use(bodyParser.json());
 
-router.get('/',authenticate.verifyUser,(req,res,next)=>{
-  authenticate.verifyAdmin(req,res,next) ;
+router.get('/',authenticate.verifyUser,authenticate.verifyAdmin,(req,res,next)=>{
   User.find({}).then((allUsers)=>{
     res.statusCode = 200 ;
     res.setHeader('Content-Type','application/json');
