@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+
 const Promotions = require('../models/promotions');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
