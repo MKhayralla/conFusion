@@ -29,22 +29,29 @@ favoriteRouter.route('/')
     for (var i = 0; i < list.length; i++) {
       list[i] = list[i]._id ;
     };
-    if (fav !== null) {
+    if (fav) {
       for (var i = 0; i < list.length; i++) {
-        if(fav.favoriteDishes.indexOf(list[i]) == -1){
+        if(fav.favoriteDishes.indexOf(list[i]) < 0){
           fav.favoriteDishes = fav.favoriteDishes.concat(list[i]);
-        };
-      };
-      Favorites.findByIdAndUpdate(fav._id,{favoriteDishes : fav.favoriteDishes},{new : true})
-      .then(() => next() , (err) => next(err))
+        }
+      }
+      fav.save()
+      .then((resp) => {
+        res.statusCode = 200 ;
+        res.setHeader('Content-Type','application/json') ;
+        res.json(resp) ;
+      } , (err) => next(err))
       .catch((err)=>next(err));
     }
     else {
       Favorites.create({ owner : req.user , favoriteDishes : list})
-    };
-    res.statusCode = 200 ;
-    res.setHeader('Content-Type','application/json') ;
-    res.json({favListUpdatedWith : list}) ;
+      .then((resp)=>{
+        res.statusCode = 200 ;
+        res.setHeader('Content-Type','application/json') ;
+        res.json(resp) ;
+      } , (err) => next(err))
+      .catch((err) => next(err)) ;
+    }
   },(err) => next(err))
   .catch((err) => next(err)) ;
 })
@@ -63,38 +70,56 @@ favoriteRouter.route('/:dishId')
 .post(cors.corsWithOptions,authenticate.verifyUser,(req , res , next) => {
   Favorites.findOne({owner : req.user })
   .then((fav) => {
-    if (fav !== null){
-      if(fav.favoriteDishes.indexOf(req.params.dishId) == -1){
+    if (fav){
+      if(fav.favoriteDishes.indexOf(req.params.dishId) < 0){
       fav.favoriteDishes = fav.favoriteDishes.concat(req.params.dishId);
-      Favorites.findByIdAndUpdate(fav._id,{favoriteDishes : fav.favoriteDishes})
-      .then(() => next() , (err) => next(err))
+      fav.save()
+      .then((resp) => {
+        res.statusCode = 200 ;
+        res.setHeader('Content-Type','application/json');
+        res.json(resp);
+      } , (err) => next(err))
       .catch((err)=>next(err));
-      };
+      }
+      else {
+        res.statusCode = 403 ;
+        res.setHeader('Content-Type','text/plain');
+        res.end("duplicate fav");
+      }
     }
     else {
-      Favorites.create({owner : req.user , favoriteDishes : req.params.dishId}) ;
+      Favorites.create({owner : req.user , favoriteDishes : req.params.dishId})
+      .then((resp)=>{
+        res.statusCode = 200 ;
+        res.setHeader('Content-Type','application/json');
+        res.json(resp);
+      }, (err) => next(err))
+      .catch(err => next(err));
     }
-    res.statusCode = 200 ;
-    res.setHeader('Content-Type','application/json');
-    res.json({added : req.params.dishId});
   }, (err) => next(err))
   .catch((err) => next(err));
 })
 .delete(cors.corsWithOptions,authenticate.verifyUser,(req,res,next)=>{
   Favorites.findOne({owner : req.user })
   .then((fav) => {
-    if (fav !== null) {
+    if (fav) {
       var dishIndex = fav.favoriteDishes.indexOf(req.params.dishId) ;
-      if (dishIndex !== -1) {
+      if (dishIndex > -1) {
         fav.favoriteDishes.splice(dishIndex , 1) ;
       }
-      Favorites.findByIdAndUpdate(fav._id , {$set : {favoriteDishes : fav.favoriteDishes}},{new : true})
-      .then(() =>next(),(err) =>next(err))
+      fav.save()
+      .then((resp) => {
+        res.statusCode = 200 ;
+        res.setHeader('Content-Type','application/json');
+        res.json(resp);
+      },(err) =>next(err))
       .catch((err) => next(err));
     }
-    res.statusCode = 200 ;
-    res.setHeader('Content-Type','application/json');
-    res.json({deleted : req.params.dishId});
+    else {
+      res.statusCode = 404 ;
+      res.setHeader('Content-Type','text/plain');
+      res.end('favorite list not found');
+    }
   },(err) =>next(err))
   .catch((err)=> next(err));
 });
